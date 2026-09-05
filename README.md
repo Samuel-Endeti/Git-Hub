@@ -18,6 +18,13 @@ Traditional machine learning pipelines struggle when training data is scarce. Th
 ## How to Run Locally
 
 1. Clone the repository:
-   ```bash
-   [https://github.com/Samuel-Endeti/Git-Hub.git](https://github.com/Samuel-Endeti/Git-Hub.git)
-  
+2. Install the required dependencies:
+3. Run the Streamlit application:
+
+```bash
+git clone https://github.com/Samuel-Endeti/Git-Hub.git
+pip install -r requirements.txt
+streamlit run app.py
+
+
+
