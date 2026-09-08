@@ -1,4 +1,4 @@
-# Bird Species Classification Engine
+# Bird Species Classification Enhancement Via AIWPSO - Based on Image Augmentation Selection
 
 An optimized deep learning application designed for accurate classification in low-data availability environments, utilizing a Convolutional Neural Network (CNN) powered by an Adaptive Inertia Weight Particle Swarm Optimization (AIWPSO) algorithm.
 
