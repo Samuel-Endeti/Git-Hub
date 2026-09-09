@@ -1,7 +1,11 @@
 import os
 import numpy as np
-import tensorflow as tf
 import json
+
+# --- CRITICAL FIX FOR LAZY LOADER LOOP ---
+# Explicitly import keras components before tensorflow to bypass the recursion bug
+import keras
+import tensorflow as tf
 
 # ---------------- AUTO-MERGE MODEL CHUNKS ----------------
 if not os.path.exists("model.h5"):
@@ -36,12 +40,12 @@ def predict_image(pil_image):
     img_array = np.expand_dims(img_array, axis=0)
 
     # Predict
-    prediction = model.predict(img_array)[0]
+    prediction = model.predict(img_array)
 
     sorted_indices = np.argsort(prediction)[::-1]
 
-    top1_idx = sorted_indices[0]
-    top2_idx = sorted_indices[1] if len(sorted_indices) > 1 else 0
+    top1_idx = sorted_indices
+    top2_idx = sorted_indices if len(sorted_indices) > 1 else 0
 
     top1 = prediction[top1_idx]
     top2 = prediction[top2_idx]
