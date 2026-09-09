@@ -6,9 +6,18 @@ import tensorflow as tf
 from tensorflow.keras.utils import img_to_array
 import json
 
+# ---------------- AUTO-MERGE MODEL CHUNKS ----------------
+if not os.path.exists("model.h5"):
+    print("🔧 Reconstructing model from uploaded parts...")
+    with open("model.h5", "wb") as main_file:
+        for part in ["model_part_1.h5", "model_part_2.h5"]:
+            if os.path.exists(part):
+                with open(part, "rb") as part_file:
+                    main_file.write(part_file.read())
+
 # ---------------- LOAD MODEL ----------------
 model = tf.keras.models.load_model("model.h5")
-print("✅ Model loaded!")
+print("✅ Model loaded successfully!")
 
 # ---------------- LOAD CLASS NAMES (FAST) ----------------
 def get_class_names():
