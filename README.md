@@ -1,42 +1,48 @@
-# Bird Species Classification Enhancement Via AIWPSO - Based on Image Augmentation Selection
+# Avian Intelligence Optimization Engine (AIWPSO & CNN)
 
-An optimized deep learning application designed for accurate classification in low-data availability environments, utilizing a Convolutional Neural Network (CNN) powered by an Adaptive Inertia Weight Particle Swarm Optimization (AIWPSO) algorithm.
+An optimized deep learning image classification platform designed for high-accuracy performance in low-data availability environments, utilizing a Convolutional Neural Network (CNN) enhanced by an Adaptive Inertia Weight Particle Swarm Optimization (AIWPSO) algorithm.
 
-
-## Overview
 Traditional machine learning pipelines struggle when training data is scarce. This project addresses data limitations by applying an optimized particle swarm algorithm to fine-tune network weights and feature selection, making rare bird species detection robust and reliable.
 
-
-## Features
-* **Optimized Engine**: Utilizes AIWPSO to enhance performance under low data availability.
-* **Deep Learning CNN**: Specialized architecture for fine-grained image classification.
-* **Interactive Web App**: Built with Streamlit for a smooth user experience.
-  
-
-## Tech Stack
-* **Language**: Python 3.10
-* **Framework**: Streamlit
-* **Algorithms**: CNN, AIWPSO
-  
-
-### Default Login Credentials
-* **Admin Account:**
-  * Username: `admin`
-  * Password: `admin123`
-
-* **Standard User Account:**
-  * Username: `user`
-  * Password: `user123`
+## 🚀 Live Application
+Access the production-ready dashboard here: **[Open Live App](https://avian-intelligence-aiwpso.streamlit.app)**
 
 
+## 🔑 Default Login Credentials
+* **Standard User Account:** Username: `user` | Password: `user123`
+* **Admin Account:** Username: `admin` | Password: `admin123`
 
-## How to Run Locally
-1. Clone the repository:
-2. Install the required dependencies:
-3. Run the Streamlit application:
-   
+## 🛠️ Key System Features
+* **Optimized Engine:** Utilizes an evolutionary AIWPSO framework to enhance features and model weights under low data availability.
+* **Deep Learning CNN:** Specialized deep learning architecture built for fine-grained image classification.
+* **Smart Model Management:** Implemented on-the-fly binary stream reconstruction logic to seamlessly merge split high-capacity neural network chunks (`.h5`) directly within restricted cloud server environments.
+* **Interactive Web App:** Multi-role operational workspaces built with Streamlit for a smooth user experience.
+
+## 💻 Tech Stack
+* **Language:** Python 3.10
+* **Framework:** Streamlit Cloud Architecture
+* **Core Deep Learning Framework:** TensorFlow, Keras
+* **Algorithms & Optimization:** CNN, AIWPSO Metaheuristics
+* **Data Processing & Utilities:** NumPy, Pillow, JSON
+
+## ⚙️ How to Run Locally
+
+Clone the repository to your machine:
 ```bash
-git clone https://github.com/Samuel-Endeti/Git-Hub.git
-pip install -r requirements.txt
-streamlit run app.py
+git clone https://github.com
+```
 
+Navigate into the project directory:
+```bash
+cd avian-intelligence-aiwpso
+```
+
+Install the required software dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Launch the Streamlit web dashboard interface:
+```bash
+streamlit run app.py
+```
