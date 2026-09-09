@@ -3,7 +3,6 @@ import numpy as np
 import json
 
 # --- CRITICAL FIX FOR LAZY LOADER LOOP ---
-# Explicitly import keras components before tensorflow to bypass the recursion bug
 import keras
 import tensorflow as tf
 
@@ -39,18 +38,19 @@ def predict_image(pil_image):
     img_array = np.array(img, dtype=np.float32) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Predict
-    prediction = model.predict(img_array)
+    # Predict and explicitly flatten to a 1D array
+    prediction = model.predict(img_array).flatten()
 
+    # Get sorted indices in descending order of probability
     sorted_indices = np.argsort(prediction)[::-1]
 
-    top1_idx = sorted_indices
-    top2_idx = sorted_indices if len(sorted_indices) > 1 else 0
+    top1_idx = int(sorted_indices[0])
+    top2_idx = int(sorted_indices[1]) if len(sorted_indices) > 1 else 0
 
-    top1 = prediction[top1_idx]
-    top2 = prediction[top2_idx]
+    top1 = float(prediction[top1_idx])
+    top2 = float(prediction[top2_idx])
 
-    confidence = float(top1)
+    confidence = top1
     predicted_class = class_names[top1_idx]
 
     # ---------------- TOP 3 ----------------
