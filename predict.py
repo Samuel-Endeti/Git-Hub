@@ -3,7 +3,6 @@ os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import img_to_array
 import json
 
 # ---------------- AUTO-MERGE MODEL CHUNKS ----------------
@@ -33,9 +32,9 @@ print("📂 Classes:", class_names)
 
 # ---------------- PREDICT FUNCTION ----------------
 def predict_image(pil_image):
-    # Resize & preprocess
+    # Resize & preprocess natively using PIL and NumPy
     img = pil_image.resize((224, 224))
-    img_array = img_to_array(img) / 255.0
+    img_array = np.array(img, dtype=np.float32) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
     # Predict
