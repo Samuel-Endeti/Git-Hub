@@ -1,0 +1,57 @@
+import os
+os.environ['TF_USE_LEGACY_KERAS'] = '1'
+
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.utils import img_to_array
+import json
+
+# ---------------- LOAD MODEL ----------------
+model = tf.keras.models.load_model("model.h5")
+print("✅ Model loaded!")
+
+# ---------------- LOAD CLASS NAMES (FAST) ----------------
+def get_class_names():
+    if os.path.exists("class_names.json"):
+        with open("class_names.json", "r") as f:
+            return json.load(f)
+    else:
+        raise FileNotFoundError("❌ class_names.json not found. Train model first.")
+
+class_names = get_class_names()
+print("📂 Classes:", class_names)
+
+
+# ---------------- PREDICT FUNCTION ----------------
+def predict_image(pil_image):
+    # Resize & preprocess
+    img = pil_image.resize((224, 224))
+    img_array = img_to_array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+
+    # Predict
+    prediction = model.predict(img_array)[0]
+
+    sorted_indices = np.argsort(prediction)[::-1]
+
+    top1_idx = sorted_indices[0]
+    top2_idx = sorted_indices[1] if len(sorted_indices) > 1 else 0
+
+    top1 = prediction[top1_idx]
+    top2 = prediction[top2_idx]
+
+    confidence = float(top1)
+    predicted_class = class_names[top1_idx]
+
+    # ---------------- TOP 3 ----------------
+    top3 = [(class_names[i], float(prediction[i])) for i in sorted_indices[:3]]
+
+    # ---------------- STATUS ----------------
+    if predicted_class.lower() == "unknown":
+        status = "unknown"
+    elif top1 < 0.5 or (top1 - top2) < 0.1:
+        status = "uncertain"
+    else:
+        status = "confident"
+
+    return status, predicted_class, confidence, top3, prediction
