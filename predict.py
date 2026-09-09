@@ -3,7 +3,7 @@ os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.utils import img_to_array
+from tensorflow.keras.preprocessing.image import img_to_array
 import json
 
 # ---------------- AUTO-MERGE MODEL CHUNKS ----------------
