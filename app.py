@@ -70,18 +70,46 @@ if st.sidebar.button("🚪 Logout"):
 if page == "User":
     st.header("🔍 Bird Species Prediction")
 
-    uploaded_file = st.file_uploader("Upload Bird Image", type=["jpg", "png"])
+    # -------- QUICK TEST PRESETS FOR RECRUITERS --------
+    st.write("### 🧪 Quick Evaluation Presets")
+    st.write("Click any sample option below to instantly run evaluation metrics using preset dataset targets:")
+    
+    col_btn1, col_btn2, col_btn3 = st.columns(3)
+    selected_preset_path = None
 
+    with col_btn1:
+        if st.button("🔴 Northern Cardinal"):
+            selected_preset_path = "Cardinal_sample.jpg"
+    with col_btn2:
+        if st.button("🟢 Painted Bunting"):
+            selected_preset_path = "Painted_Bunting_Sample.jpg"
+    with col_btn3:
+        if st.button("⚪ White Wagtail"):
+            selected_preset_path = "White-Wagtail_sample.jpg"
+
+    st.markdown("---")
+
+    # -------- FILE UPLOADER --------
+    uploaded_file = st.file_uploader("Or Upload Custom Bird Image", type=["jpg", "png"])
+
+    image = None
+
+    # Handle source image prioritization (Manual Upload takes precedence over Button Click)
     if uploaded_file:
         image = Image.open(uploaded_file)
+    elif selected_preset_path and os.path.exists(selected_preset_path):
+        image = Image.open(selected_preset_path)
+        st.info(f"Loaded evaluation preset target: `{selected_preset_path}`")
 
+    # Trigger inference calculations if an image source is verified active
+    if image:
         col1, col2 = st.columns(2)
 
-        # -------- IMAGE --------
+        # -------- IMAGE VIEW --------
         with col1:
-            st.image(image, caption="Uploaded Image", width="stretch")
+            st.image(image, caption="Target Image", use_container_width=True)
 
-        # -------- PREDICTION --------
+        # -------- PREDICTION OUTPUT --------
         with col2:
             with st.spinner("Analyzing image... 🧠"):
                 status, label, confidence, top3, prediction = predict_image(image)
@@ -129,7 +157,7 @@ if page == "User":
 
         st.markdown("---")
 
-        # -------- MODEL PERFORMANCE --------
+        # -------- MODEL PERFORMANCE GRAPH METRICS --------
         st.subheader("📈 Model Performance")
 
         col3, col4 = st.columns(2)
