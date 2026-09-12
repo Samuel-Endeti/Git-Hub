@@ -78,10 +78,10 @@ if page == "User":
     selected_preset_path = None
 
     with col_btn1:
-        if st.button("🔴 Northern Cardinal"):
-            selected_preset_path = "Cardinal_sample.jpg"
+        if st.button("🟢 Asian Green Bee-Eater"):
+            selected_preset_path = "Asian-green-Bee-Eater-Sample.jpg"
     with col_btn2:
-        if st.button("🟢 Painted Bunting"):
+        if st.button("🔵 Painted Bunting"):
             selected_preset_path = "Painted_Bunting_Sample.jpg"
     with col_btn3:
         if st.button("⚪ White Wagtail"):
@@ -90,24 +90,24 @@ if page == "User":
     st.markdown("---")
 
     # -------- FILE UPLOADER --------
-    uploaded_file = st.file_uploader("Or Upload Custom Bird Image", type=["jpg", "png"])
+    uploaded_file = st.file_uploader("Upload Bird Image", type=["jpg", "png"])
 
     image = None
 
-    # Handle source image prioritization (Manual Upload takes precedence over Button Click)
+    # Handle image prioritization (Manual Upload takes precedence over Button Click)
     if uploaded_file:
         image = Image.open(uploaded_file)
     elif selected_preset_path and os.path.exists(selected_preset_path):
         image = Image.open(selected_preset_path)
         st.info(f"Loaded evaluation preset target: `{selected_preset_path}`")
 
-    # Trigger inference calculations if an image source is verified active
+    # Run execution pipeline only if an image source is active
     if image:
         col1, col2 = st.columns(2)
 
         # -------- IMAGE VIEW --------
         with col1:
-            st.image(image, caption="Target Image", use_container_width=True)
+            st.image(image, caption="Uploaded Image", use_container_width=True)
 
         # -------- PREDICTION OUTPUT --------
         with col2:
@@ -157,7 +157,7 @@ if page == "User":
 
         st.markdown("---")
 
-        # -------- MODEL PERFORMANCE GRAPH METRICS --------
+        # -------- MODEL PERFORMANCE METRICS --------
         st.subheader("📈 Model Performance")
 
         col3, col4 = st.columns(2)
