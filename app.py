@@ -3,7 +3,6 @@ from PIL import Image
 import subprocess
 import os
 import pandas as pd
-
 from predict import predict_image
 from dataset_utils import save_uploaded_images
 
@@ -194,6 +193,16 @@ elif st.session_state.logged_in and page == "User Dashboard":
         df = df.sort_values(by="Probability", ascending=False).head(5)
         st.bar_chart(df.set_index("Class"))
 
+        st.markdown("---")
+        st.subheader("📈 Core Optimization Metrics")
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            if os.path.exists("accuracy.png"):
+                st.image("accuracy.png", caption="Model Accuracy Plot")
+        with col_g2:
+            if os.path.exists("loss.png"):
+                st.image("loss.png", caption="Model Convergence Loss Plot")
+
 # ================= SITUATION C: SECURE ADMIN CONTROL LEVEL =================
 elif st.session_state.logged_in and page == "Admin Dashboard":
     st.header("🛠 Enterprise Admin Core Dashboard")
@@ -228,14 +237,3 @@ elif st.session_state.logged_in and page == "Admin Dashboard":
                 else:
                     st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
         with col_a2:
-            if st.button("Flush Current Queue"):
-                st.session_state.upload_key += 1
-                st.session_state.upload_message = "🧹 Current queue cleared from temporary cache arrays."
-                st.rerun()
-
-        if st.session_state.upload_message:
-            st.success(st.session_state.upload_message)
-
-    # -------- TAB 2: TRAINING --------
-    with tab2:
-        st.subheader("Execute Optimization Script Routines")
