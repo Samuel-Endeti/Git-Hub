@@ -33,10 +33,7 @@ if "role" not in st.session_state:
 if "selected_preset" not in st.session_state:
     st.session_state.selected_preset = None
 
-if "scroll_trigger" not in st.session_state:
-    st.session_state.scroll_trigger = False
-
-# ---------------- SIDEBAR MANAGEMENT (ONLY ACTIVE WHEN LOGGED IN) ----------------
+# ---------------- SIDEBAR NAVIGATION (ONLY ACTIVE WHEN LOGGED IN) ----------------
 if st.session_state.logged_in:
     st.sidebar.title("Navigation Menu")
     st.sidebar.write(f"👤 Account: {st.session_state.role.upper()}")
@@ -51,123 +48,109 @@ if st.session_state.logged_in:
         st.session_state.logged_in = False
         st.session_state.role = None
         st.session_state.selected_preset = None
-        st.session_state.scroll_trigger = False
         st.success("Logged out successfully!")
         st.rerun()
 else:
-    # Default selection for public users when logged out
-    page = "🔍 User Sandbox (Public Display)"
+    page = "🔍 Public Workspace"
 
-# ================= SITUATION A: PUBLIC VISITOR LANDING SCREEN =================
-if page == "🔍 User Sandbox (Public Display)":
-    st.header("🔍 Bird Species Prediction")
-
-    # -------- QUICK TEST PRESETS FOR RECRUITERS --------
-    st.write("### 🧪 Quick Evaluation Presets")
-    st.write("Click any sample option below to instantly run evaluation metrics using preset dataset targets:")
+# ================= PUBLIC LANDING WORKSPACE =================
+if page == "🔍 Public Workspace":
     
-    col_btn1, col_btn2, col_btn3 = st.columns(3)
-    selected_preset_path = None
+    # Create clean navigation tabs right at the top of the app
+    public_tab1, public_tab2 = st.tabs([
+        "🦅 Interactive Evaluation Sandbox", 
+        "🔐 Secure Workspace Login"
+    ])
 
-    with col_btn1:
-        if st.button("🟢 Asian Green Bee-Eater"):
-            st.session_state.selected_preset = "Asian-green-Bee-Eater-Sample.jpg"
-            st.session_state.scroll_trigger = True
-    with col_btn2:
-        if st.button("🔵 Painted Bunting"):
-            st.session_state.selected_preset = "Painted_Bunting_Sample.jpg"
-            st.session_state.scroll_trigger = True
-    with col_btn3:
-        if st.button("⚪ White Wagtail"):
-            st.session_state.selected_preset = "White-Wagtail_sample.jpg"
-            st.session_state.scroll_trigger = True
-
-    st.markdown("---")
-
-    # -------- ACCOUNT LOGIN FORM --------
-    st.subheader("🔐 Secure Workspace Authentication")
-    st.write("Authorized accounts can log in below to unlock custom file upload testing channels or administrative tools.")
-    
-    with st.form("login_form_container"):
-        username_input = st.text_input("Username")
-        password_input = st.text_input("Password", type="password")
-        submit_login = st.form_submit_button("Verify & Sign In")
+    # ---------------- TAB 1: PUBLIC SHOWROOM ----------------
+    with public_tab1:
+        st.write("### 🧪 Quick Evaluation Presets")
+        st.write("Click any sample option below to instantly run evaluation metrics using preset dataset targets:")
         
-        if submit_login:
-            detected_role = login(username_input, password_input)
-            if detected_role:
-                st.session_state.logged_in = True
-                st.session_state.role = detected_role
-                st.session_state.selected_preset = None  # Clear presets upon active login
-                st.session_state.scroll_trigger = False
-                st.success("Access authorized successfully!")
-                st.rerun()
-            else:
-                st.error("Invalid credentials provided. Please try again.")
+        col_btn1, col_btn2, col_btn3 = st.columns(3)
 
-    # -------- DYNAMIC INFERENCE RENDERING LAYER --------
-    if st.session_state.selected_preset and os.path.exists(st.session_state.selected_preset):
-        st.markdown("---")
+        with col_btn1:
+            if st.button("🟢 Asian Green Bee-Eater"):
+                st.session_state.selected_preset = "Asian-green-Bee-Eater-Sample.jpg"
+        with col_btn2:
+            if st.button("🔵 Painted Bunting"):
+                st.session_state.selected_preset = "Painted_Bunting_Sample.jpg"
+        with col_btn3:
+            if st.button("⚪ White Wagtail"):
+                st.session_state.selected_preset = "White-Wagtail_sample.jpg"
+
+        # The prediction results display immediately right here under the buttons!
+        if st.session_state.selected_preset and os.path.exists(st.session_state.selected_preset):
+            st.markdown("---")
+            st.write(f"### 📊 Live Model Inference Output: `{st.session_state.selected_preset}`")
+            
+            image = Image.open(st.session_state.selected_preset)
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.image(image, caption="Preset Target Image", use_container_width=True)
+
+            with col2:
+                with st.spinner("Processing deep learning weights... 🧠"):
+                    status, label, confidence, top3, prediction = predict_image(image)
+
+                if status == "unknown":
+                    st.error("❌ Unknown Bird Detected")
+                elif status == "uncertain":
+                    st.warning("⚠️ High uncertainty threshold reached")
+                    st.info(f"🔍 Nearest matching distribution: {label}")
+                else:
+                    st.success("✅ Species Confirmed!")
+                    st.write(f"🐦 **Classification Result:** {label}")
+
+                st.info(f"📊 Pipeline Confidence: {confidence:.2f}")
+
+            st.markdown("---")
+            st.subheader("🏆 Distribution Hierarchy")
+            for cls, prob in top3:
+                st.write(f"{cls} ({prob:.2f})")
+                st.progress(prob)
+
+            st.markdown("---")
+            st.subheader("📊 Probability Metrics Chart")
+            from predict import class_names
+            df = pd.DataFrame({"Class": class_names, "Probability": prediction})
+            df = df.sort_values(by="Probability", ascending=False).head(5)
+            st.bar_chart(df.set_index("Class"))
+
+            st.markdown("---")
+            st.subheader("📈 Core Optimization Metrics")
+            col_g1, col_g2 = st.columns(2)
+            with col_g1:
+                if os.path.exists("accuracy.png"):
+                    st.image("accuracy.png", caption="Model Accuracy Plot")
+            with col_g2:
+                if os.path.exists("loss.png"):
+                    st.image("loss.png", caption="Model Convergence Loss Plot")
+        else:
+            st.markdown("---")
+            st.info("💡 Click any of the three bird buttons above to view real-time predictions, charts, and metrics instantly.")
+
+    # ---------------- TAB 2: LOGIN SECTION ----------------
+    with public_tab2:
+        st.subheader("🔐 Secure Workspace Authentication")
+        st.write("Authorized accounts can log in below to unlock custom file upload testing channels or administrative tools.")
         
-        # --- AUTOMATIC SCROLL INJECTION POINT ---
-        st.markdown('<div id="result-view"></div>', unsafe_allow_html=True)
-        if st.session_state.scroll_trigger:
-            st.components.v1.html(
-                """
-                <script>
-                    window.parent.document.getElementById('result-view').scrollIntoView({behavior: 'smooth'});
-                </script>
-                """,
-                height=0,
-                width=0
-            )
-            st.session_state.scroll_trigger = False
-
-        st.write(f"### 📊 Live Model Inference Output: `{st.session_state.selected_preset}`")
-        
-        image = Image.open(st.session_state.selected_preset)
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.image(image, caption="Preset Target Image", use_container_width=True)
-
-        with col2:
-            with st.spinner("Processing deep learning weights... 🧠"):
-                status, label, confidence, top3, prediction = predict_image(image)
-
-            if status == "unknown":
-                st.error("❌ Unknown Bird Detected")
-            elif status == "uncertain":
-                st.warning("⚠️ High uncertainty threshold reached")
-                st.info(f"🔍 Nearest matching distribution: {label}")
-            else:
-                st.success("✅ Species Confirmed!")
-                st.write(f"🐦 **Classification Result:** {label}")
-
-            st.info(f"📊 Pipeline Confidence: {confidence:.2f}")
-
-        st.markdown("---")
-        st.subheader("🏆 Distribution Hierarchy")
-        for cls, prob in top3:
-            st.write(f"{cls} ({prob:.2f})")
-            st.progress(prob)
-
-        st.markdown("---")
-        st.subheader("📊 Probability Metrics Chart")
-        from predict import class_names
-        df = pd.DataFrame({"Class": class_names, "Probability": prediction})
-        df = df.sort_values(by="Probability", ascending=False).head(5)
-        st.bar_chart(df.set_index("Class"))
-
-        st.markdown("---")
-        st.subheader("📈 Core Optimization Metrics")
-        col_g1, col_g2 = st.columns(2)
-        with col_g1:
-            if os.path.exists("accuracy.png"):
-                st.image("accuracy.png", caption="Model Accuracy Plot")
-        with col_g2:
-            if os.path.exists("loss.png"):
-                st.image("loss.png", caption="Model Convergence Loss Plot")
+        with st.form("login_form_container"):
+            username_input = st.text_input("Username")
+            password_input = st.text_input("Password", type="password")
+            submit_login = st.form_submit_button("Verify & Sign In")
+            
+            if submit_login:
+                detected_role = login(username_input, password_input)
+                if detected_role:
+                    st.session_state.logged_in = True
+                    st.session_state.role = detected_role
+                    st.session_state.selected_preset = None  # Clear presets upon active login
+                    st.success("Access authorized successfully!")
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials provided. Please try again.")
 
 # ================= SITUATION B: SECURE LOCKED USER DASHBOARD =================
 elif st.session_state.logged_in and page == "User Dashboard":
@@ -247,3 +230,12 @@ elif st.session_state.logged_in and page == "Admin Dashboard":
         with col_a2:
             if st.button("Flush Current Queue"):
                 st.session_state.upload_key += 1
+                st.session_state.upload_message = "🧹 Current queue cleared from temporary cache arrays."
+                st.rerun()
+
+        if st.session_state.upload_message:
+            st.success(st.session_state.upload_message)
+
+    # -------- TAB 2: TRAINING --------
+    with tab2:
+        st.subheader("Execute Optimization Script Routines")
