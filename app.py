@@ -105,7 +105,6 @@ if not st.session_state.logged_in:
         st.markdown("---")
         
         # --- AUTOMATIC SCROLL INJECTION POINT ---
-        # This invisible anchor combined with JS components jumps the viewport directly to the results
         st.markdown('<div id="result-view"></div>', unsafe_allow_html=True)
         if st.session_state.scroll_trigger:
             st.components.v1.html(
@@ -240,3 +239,5 @@ elif st.session_state.logged_in and st.session_state.role == "admin":
                     st.session_state.upload_key += 1
                     st.rerun()
                 else:
+                    st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
+        with col_a2:
