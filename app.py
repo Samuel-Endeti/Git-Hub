@@ -33,6 +33,9 @@ if "role" not in st.session_state:
 if "selected_preset" not in st.session_state:
     st.session_state.selected_preset = None
 
+if "scroll_trigger" not in st.session_state:
+    st.session_state.scroll_trigger = False
+
 # ---------------- SIDEBAR MANAGEMENT (ONLY ACTIVE WHEN LOGGED IN) ----------------
 if st.session_state.logged_in:
     st.sidebar.title("Navigation Menu")
@@ -48,6 +51,7 @@ if st.session_state.logged_in:
         st.session_state.logged_in = False
         st.session_state.role = None
         st.session_state.selected_preset = None
+        st.session_state.scroll_trigger = False
         st.success("Logged out successfully!")
         st.rerun()
 
@@ -63,22 +67,25 @@ if not st.session_state.logged_in:
     with col_btn1:
         if st.button("🟢 Asian Green Bee-Eater"):
             st.session_state.selected_preset = "Asian-green-Bee-Eater-Sample.jpg"
+            st.session_state.scroll_trigger = True
     with col_btn2:
         if st.button("🔵 Painted Bunting"):
             st.session_state.selected_preset = "Painted_Bunting_Sample.jpg"
+            st.session_state.scroll_trigger = True
     with col_btn3:
         if st.button("⚪ White Wagtail"):
             st.session_state.selected_preset = "White-Wagtail_sample.jpg"
+            st.session_state.scroll_trigger = True
 
     st.markdown("---")
 
-    # 2. Show the Account Login Form (Fixes the Double-Click Bug via st.form)
+    # 2. Show the Account Login Form (With Standard, Clean Labels)
     st.subheader("🔐 Secure Workspace Authentication")
     st.write("Authorized accounts can log in below to unlock custom file upload testing channels or administrative tools.")
     
     with st.form("login_form_container"):
-        username_input = st.text_input("Username Identification")
-        password_input = st.text_input("Password Access Key", type="password")
+        username_input = st.text_input("Username")
+        password_input = st.text_input("Password", type="password")
         submit_login = st.form_submit_button("Verify & Sign In")
         
         if submit_login:
@@ -87,6 +94,7 @@ if not st.session_state.logged_in:
                 st.session_state.logged_in = True
                 st.session_state.role = detected_role
                 st.session_state.selected_preset = None  # Clear presets upon active login
+                st.session_state.scroll_trigger = False
                 st.success("Access authorized successfully!")
                 st.rerun()  # Forces immediate layout change on first single click
             else:
@@ -95,6 +103,22 @@ if not st.session_state.logged_in:
     # 3. Dynamic Assessment Rendering Layer (Displays at the bottom only if a preset is clicked)
     if st.session_state.selected_preset and os.path.exists(st.session_state.selected_preset):
         st.markdown("---")
+        
+        # --- AUTOMATIC SCROLL INJECTION POINT ---
+        # This invisible anchor combined with JS components jumps the viewport directly to the results
+        st.markdown('<div id="result-view"></div>', unsafe_allow_html=True)
+        if st.session_state.scroll_trigger:
+            st.components.v1.html(
+                """
+                <script>
+                    window.parent.document.getElementById('result-view').scrollIntoView({behavior: 'smooth'});
+                </script>
+                """,
+                height=0,
+                width=0
+            )
+            st.session_state.scroll_trigger = False # Reset trigger so it doesn't loop scroll endlessly
+
         st.write(f"### 📊 Live Model Inference Output: `{st.session_state.selected_preset}`")
         
         image = Image.open(st.session_state.selected_preset)
@@ -216,25 +240,3 @@ elif st.session_state.logged_in and st.session_state.role == "admin":
                     st.session_state.upload_key += 1
                     st.rerun()
                 else:
-                    st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
-        with col_a2:
-            if st.button("Flush Current Queue"):
-                st.session_state.upload_key += 1
-                st.session_state.upload_message = "🧹 Current queue cleared from temporary cash arrays."
-                st.rerun()
-
-        if st.session_state.upload_message:
-            st.success(st.session_state.upload_message)
-
-    # -------- TAB 2: TRAINING --------
-    with tab2:
-        st.subheader("Execute Optimization Script Routines")
-        if st.button("Launch AIWPSO Retraining Loop"):
-            status_placeholder = st.empty()
-            status_placeholder.warning("Recalculating hyperparameter swarm particle trajectories... ⏳")
-            subprocess.run(["python", "train_model.py"])
-            status_placeholder.success("Network layer configurations optimized and written to system memory! ✅")
-
-    # -------- TAB 3: SYSTEM PERFORMANCE --------
-    with tab3:
-        st.subheader("Administrative Log Matrix Evaluations")
