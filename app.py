@@ -215,7 +215,7 @@ elif st.session_state.logged_in and page == "Admin Dashboard":
 
     # -------- TAB 1: UPLOAD --------
     with tab1:
-        st.subheader("Append Training Directory Data")
+        st.subheader("Upload New Bird Images")
         if "upload_key" not in st.session_state:
             st.session_state.upload_key = 0
         if "upload_message" not in st.session_state:
@@ -236,4 +236,5 @@ elif st.session_state.logged_in and page == "Admin Dashboard":
                     st.rerun()
                 else:
                     st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
+                    
         with col_a2:
