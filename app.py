@@ -54,16 +54,21 @@ if st.session_state.logged_in:
         st.session_state.scroll_trigger = False
         st.success("Logged out successfully!")
         st.rerun()
+else:
+    # Default selection for public users when logged out
+    page = "🔍 User Sandbox (Public Display)"
 
 # ================= SITUATION A: PUBLIC VISITOR LANDING SCREEN =================
-if not st.session_state.logged_in:
-    
-    # 1. Show the Public Evaluation Presets Row
+if page == "🔍 User Sandbox (Public Display)":
+    st.header("🔍 Bird Species Prediction")
+
+    # -------- QUICK TEST PRESETS FOR RECRUITERS --------
     st.write("### 🧪 Quick Evaluation Presets")
-    st.write("Recruiters can click any model target preset below to run real-time inference calculations instantly without logging in:")
+    st.write("Click any sample option below to instantly run evaluation metrics using preset dataset targets:")
     
     col_btn1, col_btn2, col_btn3 = st.columns(3)
-    
+    selected_preset_path = None
+
     with col_btn1:
         if st.button("🟢 Asian Green Bee-Eater"):
             st.session_state.selected_preset = "Asian-green-Bee-Eater-Sample.jpg"
@@ -79,7 +84,7 @@ if not st.session_state.logged_in:
 
     st.markdown("---")
 
-    # 2. Show the Account Login Form (With Standard, Clean Labels)
+    # -------- ACCOUNT LOGIN FORM --------
     st.subheader("🔐 Secure Workspace Authentication")
     st.write("Authorized accounts can log in below to unlock custom file upload testing channels or administrative tools.")
     
@@ -96,11 +101,11 @@ if not st.session_state.logged_in:
                 st.session_state.selected_preset = None  # Clear presets upon active login
                 st.session_state.scroll_trigger = False
                 st.success("Access authorized successfully!")
-                st.rerun()  # Forces immediate layout change on first single click
+                st.rerun()
             else:
                 st.error("Invalid credentials provided. Please try again.")
 
-    # 3. Dynamic Assessment Rendering Layer (Displays at the bottom only if a preset is clicked)
+    # -------- DYNAMIC INFERENCE RENDERING LAYER --------
     if st.session_state.selected_preset and os.path.exists(st.session_state.selected_preset):
         st.markdown("---")
         
@@ -116,7 +121,7 @@ if not st.session_state.logged_in:
                 height=0,
                 width=0
             )
-            st.session_state.scroll_trigger = False # Reset trigger so it doesn't loop scroll endlessly
+            st.session_state.scroll_trigger = False
 
         st.write(f"### 📊 Live Model Inference Output: `{st.session_state.selected_preset}`")
         
@@ -165,11 +170,10 @@ if not st.session_state.logged_in:
                 st.image("loss.png", caption="Model Convergence Loss Plot")
 
 # ================= SITUATION B: SECURE LOCKED USER DASHBOARD =================
-elif st.session_state.logged_in and st.session_state.role == "user":
+elif st.session_state.logged_in and page == "User Dashboard":
     st.header("🔍 Custom Image Upload Channel")
     st.write("Account status verified. You now have secure permission access to upload your own media assets.")
 
-    # Custom "Browse files" loader is completely safe here behind the login wall
     uploaded_file = st.file_uploader("Upload Bird Target Asset", type=["jpg", "png"])
 
     if uploaded_file:
@@ -208,7 +212,7 @@ elif st.session_state.logged_in and st.session_state.role == "user":
         st.bar_chart(df.set_index("Class"))
 
 # ================= SITUATION C: SECURE ADMIN CONTROL LEVEL =================
-elif st.session_state.logged_in and st.session_state.role == "admin":
+elif st.session_state.logged_in and page == "Admin Dashboard":
     st.header("🛠 Enterprise Admin Core Dashboard")
 
     tab1, tab2, tab3 = st.tabs([
@@ -241,3 +245,5 @@ elif st.session_state.logged_in and st.session_state.role == "admin":
                 else:
                     st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
         with col_a2:
+            if st.button("Flush Current Queue"):
+                st.session_state.upload_key += 1
