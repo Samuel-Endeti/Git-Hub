@@ -7,10 +7,9 @@ import pandas as pd
 from predict import predict_image
 from dataset_utils import save_uploaded_images
 
-# ---------------- AUTH SYSTEM ----------------
+# ---------------- AUTH SYSTEM (Moved to Admin Panel Scope Only) ----------------
 users = {
-    "admin": {"password": "admin123", "role": "admin"},
-    "user": {"password": "user123", "role": "user"}
+    "admin": {"password": "admin123", "role": "admin"}
 }
 
 def login(username, password):
@@ -23,51 +22,27 @@ def login(username, password):
 st.set_page_config(page_title="Bird Classifier", layout="centered")
 st.title("Bird Species Classification Enhancement via Adaptive Inertia Weight Particle Swarm Optimization-Based Image Augmentation Selection")
 
-# ---------------- SESSION ----------------
+# ---------------- SESSION MANAGEMENT ----------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-if "role" not in st.session_state:
-    st.session_state.role = None
+# ---------------- SIDEBAR NAVIGATION ----------------
+st.sidebar.title("Navigation Menu")
 
-# ---------------- LOGIN PAGE ----------------
-if not st.session_state.logged_in:
-    st.subheader("🔐 Login")
+# Recruiters and public users can see the User section instantly by default
+page = st.sidebar.selectbox("Go to Workspace:", ["🔍 User Sandbox (Public Display)", "🔒 Admin Dashboard"])
 
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+# Handle active login logout options in the sidebar if they are logged into the admin side
+if st.session_state.logged_in:
+    st.sidebar.write("👤 Logged in as: admin")
+    st.sidebar.markdown("---")
+    if st.sidebar.button("🚪 Secure Logout"):
+        st.session_state.logged_in = False
+        st.success("Logged out successfully!")
+        st.rerun()
 
-    if st.button("Login"):
-        role = login(username, password)
-
-        if role:
-            st.session_state.logged_in = True
-            st.session_state.role = role
-            st.success("Login successful!")
-        else:
-            st.error("Invalid credentials")
-
-    st.stop()
-
-# ---------------- SIDEBAR ----------------
-st.sidebar.title("Navigation")
-st.sidebar.write(f"👤 Logged in as: {st.session_state.role}")
-
-if st.session_state.role == "admin":
-    page = st.sidebar.selectbox("Menu", ["Admin"])
-else:
-    page = st.sidebar.selectbox("Menu", ["User"])
-
-# ---------------- LOGOUT ----------------
-st.sidebar.markdown("---")
-if st.sidebar.button("🚪 Logout"):
-    st.session_state.logged_in = False
-    st.session_state.role = None
-    st.success("Logged out successfully!")
-    st.rerun()
-
-# ================= USER PAGE =================
-if page == "User":
+# ================= USER PAGE (OPENS DIRECTLY FOR RECRUITERS) =================
+if page == "🔍 User Sandbox (Public Display)":
     st.header("🔍 Bird Species Prediction")
 
     # -------- QUICK TEST PRESETS FOR RECRUITERS --------
@@ -174,8 +149,29 @@ if page == "User":
             else:
                 st.warning("Train model to generate loss graph")
 
-# ================= ADMIN PAGE =================
-if page == "Admin":
+# ================= ADMIN PAGE (LOCKED BEHIND LOGIN SYSTEM) =================
+if page == "🔒 Admin Dashboard":
+    # Interrupt and force validation check if admin is not securely authenticated yet
+    if not st.session_state.logged_in:
+        st.subheader("🔐 Staff Authentication Required")
+
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+
+        if st.button("Login"):
+            role = login(username, password)
+
+            if role == "admin":
+                st.session_state.logged_in = True
+                st.success("Login successful! Welcome Admin.")
+                st.rerun()
+            else:
+                st.error("Invalid admin credentials")
+        
+        # Stop loading the dashboard panels until the form matches
+        st.stop()
+
+    # Authenticated Admin View displays safely here
     st.header("🛠 Admin Dashboard")
 
     tab1, tab2, tab3 = st.tabs([
