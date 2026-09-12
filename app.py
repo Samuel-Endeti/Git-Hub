@@ -226,15 +226,15 @@ elif st.session_state.logged_in and page == "Admin Dashboard":
         )
         class_name = st.text_input("Enter Target Class Key Directory Label")
 
-        col_a1, col_a2 = st.columns(2)
-        with col_a1:
-            if st.button("Commit Images to Directory"):
-                if uploaded_files and class_name:
-                    save_uploaded_images(uploaded_files, class_name)
-                    st.session_state.upload_message = "✅ Directory matrices updated!"
-                    st.session_state.upload_key += 1
-                    st.rerun()
-                else:
-                    st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
-                    
-        with col_a2:
+        st.markdown("---")
+        
+        # Removed all sub-columns here to fix spacing issues entirely!
+        if st.button("Commit Images to Directory"):
+            if uploaded_files and class_name:
+                save_uploaded_images(uploaded_files, class_name)
+                st.session_state.upload_message = "✅ Directory matrices updated!"
+                st.session_state.upload_key += 1
+                st.rerun()
+            else:
+                st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
+                
