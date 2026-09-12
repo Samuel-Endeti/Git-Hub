@@ -7,9 +7,10 @@ import pandas as pd
 from predict import predict_image
 from dataset_utils import save_uploaded_images
 
-# ---------------- AUTH SYSTEM (Moved to Admin Panel Scope Only) ----------------
+# ---------------- AUTH CONFIGURATION ----------------
 users = {
-    "admin": {"password": "admin123", "role": "admin"}
+    "admin": {"password": "admin123", "role": "admin"},
+    "user": {"password": "user123", "role": "user"}
 }
 
 def login(username, password):
@@ -18,229 +19,222 @@ def login(username, password):
         return user["role"]
     return None
 
-# ---------------- PAGE SETUP ----------------
+# ---------------- PAGE CONFIGURATION ----------------
 st.set_page_config(page_title="Bird Classifier", layout="centered")
 st.title("Bird Species Classification Enhancement via Adaptive Inertia Weight Particle Swarm Optimization-Based Image Augmentation Selection")
 
-# ---------------- SESSION MANAGEMENT ----------------
+# ---------------- STATE MANAGEMENT ----------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
-# ---------------- SIDEBAR NAVIGATION ----------------
-st.sidebar.title("Navigation Menu")
+if "role" not in st.session_state:
+    st.session_state.role = None
 
-# Recruiters and public users can see the User section instantly by default
-page = st.sidebar.selectbox("Go to Workspace:", ["🔍 User Sandbox (Public Display)", "🔒 Admin Dashboard"])
+if "selected_preset" not in st.session_state:
+    st.session_state.selected_preset = None
 
-# Handle active login logout options in the sidebar if they are logged into the admin side
+# ---------------- SIDEBAR MANAGEMENT (ONLY ACTIVE WHEN LOGGED IN) ----------------
 if st.session_state.logged_in:
-    st.sidebar.write("👤 Logged in as: admin")
+    st.sidebar.title("Navigation Menu")
+    st.sidebar.write(f"👤 Account: {st.session_state.role.upper()}")
+    
+    if st.session_state.role == "admin":
+        page = st.sidebar.selectbox("Workspace Control:", ["Admin Dashboard"])
+    else:
+        page = st.sidebar.selectbox("Workspace Control:", ["User Dashboard"])
+        
     st.sidebar.markdown("---")
     if st.sidebar.button("🚪 Secure Logout"):
         st.session_state.logged_in = False
+        st.session_state.role = None
+        st.session_state.selected_preset = None
         st.success("Logged out successfully!")
         st.rerun()
 
-# ================= USER PAGE (OPENS DIRECTLY FOR RECRUITERS) =================
-if page == "🔍 User Sandbox (Public Display)":
-    st.header("🔍 Bird Species Prediction")
-
-    # -------- QUICK TEST PRESETS FOR RECRUITERS --------
+# ================= SITUATION A: PUBLIC VISITOR LANDING SCREEN =================
+if not st.session_state.logged_in:
+    
+    # 1. Show the Public Evaluation Presets Row
     st.write("### 🧪 Quick Evaluation Presets")
-    st.write("Click any sample option below to instantly run evaluation metrics using preset dataset targets:")
+    st.write("Recruiters can click any model target preset below to run real-time inference calculations instantly without logging in:")
     
     col_btn1, col_btn2, col_btn3 = st.columns(3)
-    selected_preset_path = None
-
+    
     with col_btn1:
         if st.button("🟢 Asian Green Bee-Eater"):
-            selected_preset_path = "Asian-green-Bee-Eater-Sample.jpg"
+            st.session_state.selected_preset = "Asian-green-Bee-Eater-Sample.jpg"
     with col_btn2:
         if st.button("🔵 Painted Bunting"):
-            selected_preset_path = "Painted_Bunting_Sample.jpg"
+            st.session_state.selected_preset = "Painted_Bunting_Sample.jpg"
     with col_btn3:
         if st.button("⚪ White Wagtail"):
-            selected_preset_path = "White-Wagtail_sample.jpg"
+            st.session_state.selected_preset = "White-Wagtail_sample.jpg"
 
     st.markdown("---")
 
-    # -------- FILE UPLOADER --------
-    uploaded_file = st.file_uploader("Upload Bird Image", type=["jpg", "png"])
+    # 2. Show the Account Login Form (Fixes the Double-Click Bug via st.form)
+    st.subheader("🔐 Secure Workspace Authentication")
+    st.write("Authorized accounts can log in below to unlock custom file upload testing channels or administrative tools.")
+    
+    with st.form("login_form_container"):
+        username_input = st.text_input("Username Identification")
+        password_input = st.text_input("Password Access Key", type="password")
+        submit_login = st.form_submit_button("Verify & Sign In")
+        
+        if submit_login:
+            detected_role = login(username_input, password_input)
+            if detected_role:
+                st.session_state.logged_in = True
+                st.session_state.role = detected_role
+                st.session_state.selected_preset = None  # Clear presets upon active login
+                st.success("Access authorized successfully!")
+                st.rerun()  # Forces immediate layout change on first single click
+            else:
+                st.error("Invalid credentials provided. Please try again.")
 
-    image = None
-
-    # Handle image prioritization (Manual Upload takes precedence over Button Click)
-    if uploaded_file:
-        image = Image.open(uploaded_file)
-    elif selected_preset_path and os.path.exists(selected_preset_path):
-        image = Image.open(selected_preset_path)
-        st.info(f"Loaded evaluation preset target: `{selected_preset_path}`")
-
-    # Run execution pipeline only if an image source is active
-    if image:
+    # 3. Dynamic Assessment Rendering Layer (Displays at the bottom only if a preset is clicked)
+    if st.session_state.selected_preset and os.path.exists(st.session_state.selected_preset):
+        st.markdown("---")
+        st.write(f"### 📊 Live Model Inference Output: `{st.session_state.selected_preset}`")
+        
+        image = Image.open(st.session_state.selected_preset)
         col1, col2 = st.columns(2)
 
-        # -------- IMAGE VIEW --------
         with col1:
-            st.image(image, caption="Uploaded Image", use_container_width=True)
+            st.image(image, caption="Preset Target Image", use_container_width=True)
 
-        # -------- PREDICTION OUTPUT --------
         with col2:
-            with st.spinner("Analyzing image... 🧠"):
+            with st.spinner("Processing deep learning weights... 🧠"):
                 status, label, confidence, top3, prediction = predict_image(image)
 
-            # Status messages
             if status == "unknown":
                 st.error("❌ Unknown Bird Detected")
-
             elif status == "uncertain":
-                st.warning("⚠️ No exact match found")
-                st.info(f"🔍 Closest match: {label}")
-
+                st.warning("⚠️ High uncertainty threshold reached")
+                st.info(f"🔍 Nearest matching distribution: {label}")
             else:
-                st.success("✅ Bird Species Detected!")
-                st.write(f"🐦 **Predicted:** {label}")
+                st.success("✅ Species Confirmed!")
+                st.write(f"🐦 **Classification Result:** {label}")
 
-            st.info(f"📊 Confidence: {confidence:.2f}")
+            st.info(f"📊 Pipeline Confidence: {confidence:.2f}")
 
         st.markdown("---")
-
-        # -------- TOP 3 --------
-        st.subheader("🏆 Top Predictions")
-
+        st.subheader("🏆 Distribution Hierarchy")
         for cls, prob in top3:
             st.write(f"{cls} ({prob:.2f})")
             st.progress(prob)
 
         st.markdown("---")
-
-        # -------- REAL-TIME CHART --------
-        st.subheader("📊 Prediction Probabilities")
-
-        # Create dataframe
-        from predict import class_names  # import class names
-
-        df = pd.DataFrame({
-            "Class": class_names,
-            "Probability": prediction
-        })
-
-        # Show top 5 only
+        st.subheader("📊 Probability Metrics Chart")
+        from predict import class_names
+        df = pd.DataFrame({"Class": class_names, "Probability": prediction})
         df = df.sort_values(by="Probability", ascending=False).head(5)
-
         st.bar_chart(df.set_index("Class"))
 
         st.markdown("---")
-
-        # -------- MODEL PERFORMANCE METRICS --------
-        st.subheader("📈 Model Performance")
-
-        col3, col4 = st.columns(2)
-
-        with col3:
+        st.subheader("📈 Core Optimization Metrics")
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
             if os.path.exists("accuracy.png"):
-                st.image("accuracy.png", caption="Accuracy Graph")
-            else:
-                st.warning("Train model to generate accuracy graph")
-
-        with col4:
+                st.image("accuracy.png", caption="Model Accuracy Plot")
+        with col_g2:
             if os.path.exists("loss.png"):
-                st.image("loss.png", caption="Loss Graph")
+                st.image("loss.png", caption="Model Convergence Loss Plot")
+
+# ================= SITUATION B: SECURE LOCKED USER DASHBOARD =================
+elif st.session_state.logged_in and st.session_state.role == "user":
+    st.header("🔍 Custom Image Upload Channel")
+    st.write("Account status verified. You now have secure permission access to upload your own media assets.")
+
+    # Custom "Browse files" loader is completely safe here behind the login wall
+    uploaded_file = st.file_uploader("Upload Bird Target Asset", type=["jpg", "png"])
+
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.image(image, caption="Uploaded Image File", use_container_width=True)
+
+        with col2:
+            with st.spinner("Analyzing custom metrics pipeline... 🧠"):
+                status, label, confidence, top3, prediction = predict_image(image)
+
+            if status == "unknown":
+                st.error("❌ Unknown Bird Profile")
+            elif status == "uncertain":
+                st.warning("⚠️ Dynamic variance mismatch")
+                st.info(f"🔍 Alternate suggestion: {label}")
             else:
-                st.warning("Train model to generate loss graph")
+                st.success("✅ Successful Inference Mapping!")
+                st.write(f"🐦 **Species Detected:** {label}")
 
-# ================= ADMIN PAGE (LOCKED BEHIND LOGIN SYSTEM) =================
-if page == "🔒 Admin Dashboard":
-    # Interrupt and force validation check if admin is not securely authenticated yet
-    if not st.session_state.logged_in:
-        st.subheader("🔐 Staff Authentication Required")
+            st.info(f"📊 Accuracy Confidence: {confidence:.2f}")
 
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        st.markdown("---")
+        st.subheader("🏆 Top Metric Outputs")
+        for cls, prob in top3:
+            st.write(f"{cls} ({prob:.2f})")
+            st.progress(prob)
 
-        if st.button("Login"):
-            role = login(username, password)
+        st.markdown("---")
+        st.subheader("📊 Class Density Distribution")
+        from predict import class_names
+        df = pd.DataFrame({"Class": class_names, "Probability": prediction})
+        df = df.sort_values(by="Probability", ascending=False).head(5)
+        st.bar_chart(df.set_index("Class"))
 
-            if role == "admin":
-                st.session_state.logged_in = True
-                st.success("Login successful! Welcome Admin.")
-                st.rerun()
-            else:
-                st.error("Invalid admin credentials")
-        
-        # Stop loading the dashboard panels until the form matches
-        st.stop()
-
-    # Authenticated Admin View displays safely here
-    st.header("🛠 Admin Dashboard")
+# ================= SITUATION C: SECURE ADMIN CONTROL LEVEL =================
+elif st.session_state.logged_in and st.session_state.role == "admin":
+    st.header("🛠 Enterprise Admin Core Dashboard")
 
     tab1, tab2, tab3 = st.tabs([
-        "📂 Upload Data",
-        "⚙ Train Model",
-        "📊 Performance"
+        "📂 Data Pipeline Uploads",
+        "⚙ Trigger Optimization Training",
+        "📊 System Performance Logs"
     ])
 
-    # -------- TAB 1 --------
+    # -------- TAB 1: UPLOAD --------
     with tab1:
-        st.subheader("Upload New Bird Images")
-
+        st.subheader("Append Training Directory Data")
         if "upload_key" not in st.session_state:
             st.session_state.upload_key = 0
-
         if "upload_message" not in st.session_state:
             st.session_state.upload_message = ""
 
         uploaded_files = st.file_uploader(
-            "Upload Images",
-            accept_multiple_files=True,
-            key=st.session_state.upload_key
+            "Select Training Image Files", accept_multiple_files=True, key=st.session_state.upload_key
         )
+        class_name = st.text_input("Enter Target Class Key Directory Label")
 
-        class_name = st.text_input("Enter Class Name")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button("Save Images"):
+        col_a1, col_a2 = st.columns(2)
+        with col_a1:
+            if st.button("Commit Images to Directory"):
                 if uploaded_files and class_name:
                     save_uploaded_images(uploaded_files, class_name)
-                    st.session_state.upload_message = "✅ Images saved!"
+                    st.session_state.upload_message = "✅ Directory matrices updated!"
                     st.session_state.upload_key += 1
                     st.rerun()
                 else:
-                    st.warning("Provide class name and images")
-
-        with col2:
-            if st.button("Clear Upload"):
+                    st.warning("Prerequisites incomplete: verify class tags and imagery streams.")
+        with col_a2:
+            if st.button("Flush Current Queue"):
                 st.session_state.upload_key += 1
-                st.session_state.upload_message = "🧹 Upload cleared!"
+                st.session_state.upload_message = "🧹 Current queue cleared from temporary cash arrays."
                 st.rerun()
 
         if st.session_state.upload_message:
             st.success(st.session_state.upload_message)
 
-    # -------- TAB 2 --------
+    # -------- TAB 2: TRAINING --------
     with tab2:
-        st.subheader("Train Model")
-
-        if st.button("Start Training"):
-            status = st.empty()
-            status.warning("Training in progress... ⏳")
-
+        st.subheader("Execute Optimization Script Routines")
+        if st.button("Launch AIWPSO Retraining Loop"):
+            status_placeholder = st.empty()
+            status_placeholder.warning("Recalculating hyperparameter swarm particle trajectories... ⏳")
             subprocess.run(["python", "train_model.py"])
+            status_placeholder.success("Network layer configurations optimized and written to system memory! ✅")
 
-            status.success("Training Completed ✅")
-
-    # -------- TAB 3 --------
+    # -------- TAB 3: SYSTEM PERFORMANCE --------
     with tab3:
-        st.subheader("Model Performance")
-
-        if os.path.exists("accuracy.png"):
-            st.image("accuracy.png", caption="Accuracy Graph")
-        else:
-            st.info("Train model first")
-
-        if os.path.exists("loss.png"):
-            st.image("loss.png", caption="Loss Graph")
-        else:
-            st.info("Train model first")
+        st.subheader("Administrative Log Matrix Evaluations")
